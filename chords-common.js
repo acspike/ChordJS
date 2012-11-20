@@ -1,3 +1,9 @@
+/**
+ * This add-on adds some knowledge about common chords.
+ *
+ * NOTE: There must be more mathematical way to represent some of this stuff.
+ * NOTE: IANAM (I am not a musician!)
+ */
 chords.common= {
   //tuning
   'standard' : {
@@ -46,10 +52,30 @@ chords.common= {
    }
   }
 };
-chords.common.makeChord= function(container,note,size,typ,tuning) {
+//TODO: VII chord should be a 'dim'
+chords.common.keys= {
+    'major' : {
+	'A'    : [['A'],['B','minor'],['C#/Db','minor'],['D'],['E'],['F#/Gb','minor'],['G']],
+	'B'    : [['B'],['C#/Db','minor'],['D#/Eb','minor'],['E'],['F#/Gb'],['G#/Ab','minor'],['A#/Bb']],
+	'C'    : [['C'],['D','minor'],['E','minor'],['F'],['G'],['A','minor'],['A#/Bb']],
+	'D'    : [['D'],['E','minor'],['F#/Gb','minor'],['G'],['A'],['B','minor'],['C']],
+	'E'    : [['E'],['F#/Gb','minor'],['G#/Ab','minor'],['A'],['B'],['C#/Db','minor'],['D']],
+	'F'    : [['F'],['G','minor'],['A','minor'],['A#/Bb'],['C'],['D','minor'],['E']],
+	'G'    : [['G'],['A','minor'],['B','minor'],['C'],['D'],['E','minor'],['F']],
+    }
+};
+chords.common.types= {
+    'abbreviations' : {
+	'major' : '',
+	'minor' : 'm',
+	'seven' : '7'
+   }
+};
+chords.common.makeChord= function(container,note,size,typ,name,tuning) {
 	if(typ == undefined) { typ='major'; }
 	if(size == undefined) { size=3; }
 	if(tuning == undefined) { tuning = 'standard'; }
-	container.append('<chord name="'+note+'" positions="'+chords.common[tuning][typ][note][0][0]+'" fingers="'+chords.common[tuning][typ][note][0][1]+'" size="'+size+'" ></chord>');
+	if(name == undefined) { name = note + chords.common.types.abbreviations[typ]; }
+	container.append('<chord name="'+name+'" positions="'+chords.common[tuning][typ][note][0][0]+'" fingers="'+chords.common[tuning][typ][note][0][1]+'" size="'+size+'" ></chord>');
 };
 
