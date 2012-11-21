@@ -29,7 +29,9 @@ console.warn = console.warn || function(){};
 console.error = console.error || function(){};
 console.info = console.info || function(){};
 
-var chords = (function(){
+// ChordJS is a more unique namespace. keeping 'chords' for backwards-compatibility.
+var ChordJS,chords;
+ChordJS = chords = (function(){
     
     //Constants
     var NO_FINGER = '-';
@@ -416,25 +418,31 @@ var chords = (function(){
 			canvas.setAttribute('width',chord.getWidth());
 			canvas.setAttribute('height',chord.getHeight());
 			var ctx= canvas.getContext('2d');
-          		el.replaceChild(canvas, el.firstChild);
 			chord.Draw(ctx);
+          		el.replaceChild(canvas, el.firstChild);
 		}
 	}
 	};
-    //requires jQuery
-    //example: <chord name="A" positions="X02220" fingers="--222-" size="7" ></chord>
-    var ReplaceChordElements = function() {
-        $('chord').each(function(i, elt){
-            var name = $(elt).attr('name');
-            var positions = $(elt).attr('positions');
-            var fingers = $(elt).attr('fingers');
-            var size = $(elt).attr('size');
-            var chord = ChordBoxImage(name, positions, fingers, size);
-            var canvas = $('<canvas></canvas>').attr({width:chord.getWidth(), height:chord.getHeight()}).insertAfter(elt);
-            var ctx = canvas[0].getContext('2d');
-            chord.Draw(ctx);
-        });
+     //example: <chord name="A" positions="X02220" fingers="--222-" size="7" ></chord>
+     var ReplaceChordElements = function() {
+	  var elements= document.getElementsByTagName('chord');
+	  for (var i = elements.length-1; i >= 0; i--) {
+		var el = elements[i];
+		var name = el.getAttribute('name');
+		var positions = el.getAttribute('positions');
+		var fingers = el.getAttribute('fingers');
+		var size = el.getAttribute('size');
+                var chord = ChordBoxImage(name, positions, fingers, size);
+	        var canvas = document.createElement('canvas');
+		canvas.setAttribute('width',chord.getWidth());
+		canvas.setAttribute('height',chord.getHeight());
+		var ctx= canvas.getContext('2d');
+                chord.Draw(ctx);
+          	el.parentNode.replaceChild(canvas, el);
+	  }
     };
+        //RenderElements uses friendlier markup 
+	//(keeping ReplaceChordElements for backward-compatibility)
     var ReplaceDefault= function() {
 	RenderElements(document.getElementsByTagName('span'));
 	ReplaceChordElements();
