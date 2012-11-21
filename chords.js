@@ -23,6 +23,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+if (!window.console) console = {};
+console.log = console.log || function(){};
+console.warn = console.warn || function(){};
+console.error = console.error || function(){};
+console.info = console.info || function(){};
+
 var chords = (function(){
     
     //Constants
@@ -38,7 +44,12 @@ var chords = (function(){
     var FONT_NAME = "Arial";
     
     var ChordBoxImage = function(name, chord, fingers, size) {
-
+	var _stringCount= chord.length;
+	var _fretCount= FRET_COUNT;
+	if(_stringCount==4) {
+		//Ukelele etc
+		_fretCount=4;
+	}
         //Fields
         var _ctx;
         var Pen = function(color, size) {
@@ -143,8 +154,8 @@ var chords = (function(){
             _lineWidth = Math.ceil(_size * 0.31);
             _dotWidth = Math.ceil(0.9 * _fretWidth);
             _markerWidth = 0.7 * _fretWidth;
-            _boxWidth = 5 * _fretWidth + 6 * _lineWidth;
-            _boxHeight = FRET_COUNT * (_fretWidth + _lineWidth) + _lineWidth;
+            _boxWidth = (_stringCount-1) * _fretWidth + (_stringCount) * _lineWidth;
+            _boxHeight = _fretCount * (_fretWidth + _lineWidth) + _lineWidth;
 
             //Find out font sizes
             //TODO: calculate perc via CSS
@@ -189,7 +200,10 @@ var chords = (function(){
         };
 
         var ParseChord = function(chord) {
-            if (chord == null || typeof chord == 'undefined' || !chord.match(/[\dxX]{6}|((1|2)?[\dxX]-){5}(1|2)?[\dxX]/)) {
+            if (chord == null || typeof chord == 'undefined' 
+			|| (!chord.match(/[\dxX]{6}|((1|2)?[\dxX]-){5}(1|2)?[\dxX]/)
+			&& !chord.match(/[\dxX]{4}|((1|2)?[\dxX]-){3}(1|2)?[\dxX]/))
+			) {
                 _error = true;
             } else {
                 var parts;
@@ -200,7 +214,7 @@ var chords = (function(){
                 }
                 var maxFret = 0;
                 var minFret = Number.MAX_VALUE;
-                for (var i = 0; i < 6; i++) {
+                for (var i = 0; i < _stringCount; i++) {
                     if (parts[i].toUpperCase() == "X") {
                         _chordPositions[i] = MUTED;
                     } else {
@@ -241,12 +255,12 @@ var chords = (function(){
             var pen = Pen(_foregroundBrush, _lineWidth);
             var totalFretWidth = _fretWidth + _lineWidth;
 
-            for (var i = 0; i <= FRET_COUNT; i++) {
+            for (var i = 0; i <= _fretCount; i++) {
                 var y = _ystart + i * totalFretWidth;
                 _graphics.DrawLine(pen, _xstart, y, _xstart + _boxWidth - _lineWidth, y);
             }
 
-            for (i = 0; i < 6; i++) {
+            for (i = 0; i < _stringCount; i++) {
                 var x = _xstart + (i * totalFretWidth);
                 _graphics.DrawLine(pen, x, _ystart, x, _ystart + _boxHeight - _lineWidth);
             }
@@ -261,10 +275,10 @@ var chords = (function(){
         var DrawBars = function() {
             var bars = {};
             var bar;
-            for (var i = 0; i < 5; i++) {
+            for (var i = 0; i < (_stringCount-1); i++) {
                 if (_chordPositions[i] != MUTED && _chordPositions[i] != OPEN && _fingers[i] != NO_FINGER && !bars.hasOwnProperty(_fingers[i])) {
                     bar = { 'Str':i, 'Pos':_chordPositions[i], 'Length':0, 'Finger':_fingers[i] };
-                    for (var j = i + 1; j < 6; j++) {
+                    for (var j = i + 1; j < _stringCount; j++) {
                         if (_fingers[j] == bar['Finger'] && _chordPositions[j] == _chordPositions[i]) {
                             bar['Length'] = j - i;
                         }
@@ -388,7 +402,25 @@ var chords = (function(){
         };
 
     };  
-    
+    var RenderElements = function(elements) {
+	for (var i = 0; i < elements.length; i++) {
+		var el = elements[i];
+		var chordPos = el.getAttribute('data-positions');
+		if(chordPos != undefined) {
+			console.log('');
+			var chordFingers = el.getAttribute('data-fingers');
+			var chordSize = el.getAttribute('data-size');
+			var chordName = el.firstChild.nodeValue;
+            		var chord = ChordBoxImage(chordName, chordPos, chordFingers, chordSize);
+            		var canvas = document.createElement('canvas');
+			canvas.setAttribute('width',chord.getWidth());
+			canvas.setAttribute('height',chord.getHeight());
+			var ctx= canvas.getContext('2d');
+          		el.replaceChild(canvas, el.firstChild);
+			chord.Draw(ctx);
+		}
+	}
+	};
     //requires jQuery
     //example: <chord name="A" positions="X02220" fingers="--222-" size="7" ></chord>
     var ReplaceChordElements = function() {
@@ -403,10 +435,13 @@ var chords = (function(){
             chord.Draw(ctx);
         });
     };
-      
+    var ReplaceDefault= function() {
+	RenderElements(document.getElementsByTagName('span'));
+	ReplaceChordElements();
+    }; 
     return {
         chord: ChordBoxImage,
-        replace: ReplaceChordElements,
+        replace: ReplaceDefault,
     };
 
 })();
