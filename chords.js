@@ -412,7 +412,9 @@ ChordJS = chords = (function(){
 			console.log('');
 			var chordFingers = el.getAttribute('data-fingers');
 			var chordSize = el.getAttribute('data-size');
-			var chordName = el.firstChild.nodeValue;
+			var chordName = el.getAttribute('data-name') ? el.getAttribute('data-name') : el.firstChild.nodeValue;
+			//important for re-jiggery
+			if(!el.getAttribute('data-name')) { el.setAttribute('data-name', chordName); };
             		var chord = ChordBoxImage(chordName, chordPos, chordFingers, chordSize);
             		var canvas = document.createElement('canvas');
 			canvas.setAttribute('width',chord.getWidth());
