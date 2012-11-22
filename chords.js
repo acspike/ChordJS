@@ -23,7 +23,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var chords = (function(){
+if (!window.console) console = {};
+console.log = console.log || function(){};
+console.warn = console.warn || function(){};
+console.error = console.error || function(){};
+console.info = console.info || function(){};
+
+// ChordJS is a more unique namespace. keeping 'chords' for backwards-compatibility.
+var ChordJS,chords;
+ChordJS = chords = (function(){
     
     //Constants
     var NO_FINGER = '-';
@@ -38,7 +46,12 @@ var chords = (function(){
     var FONT_NAME = "Arial";
     
     var ChordBoxImage = function(name, chord, fingers, size) {
-
+	var _stringCount= chord.length;
+	var _fretCount= FRET_COUNT;
+	if(_stringCount==4) {
+		//Ukelele etc
+		_fretCount=4;
+	}
         //Fields
         var _ctx;
         var Pen = function(color, size) {
@@ -143,8 +156,8 @@ var chords = (function(){
             _lineWidth = Math.ceil(_size * 0.31);
             _dotWidth = Math.ceil(0.9 * _fretWidth);
             _markerWidth = 0.7 * _fretWidth;
-            _boxWidth = 5 * _fretWidth + 6 * _lineWidth;
-            _boxHeight = FRET_COUNT * (_fretWidth + _lineWidth) + _lineWidth;
+            _boxWidth = (_stringCount-1) * _fretWidth + (_stringCount) * _lineWidth;
+            _boxHeight = _fretCount * (_fretWidth + _lineWidth) + _lineWidth;
 
             //Find out font sizes
             //TODO: calculate perc via CSS
@@ -189,7 +202,10 @@ var chords = (function(){
         };
 
         var ParseChord = function(chord) {
-            if (chord == null || typeof chord == 'undefined' || !chord.match(/[\dxX]{6}|((1|2)?[\dxX]-){5}(1|2)?[\dxX]/)) {
+            if (chord == null || typeof chord == 'undefined' 
+			|| (!chord.match(/[\dxX]{6}|((1|2)?[\dxX]-){5}(1|2)?[\dxX]/)
+			&& !chord.match(/[\dxX]{4}|((1|2)?[\dxX]-){3}(1|2)?[\dxX]/))
+			) {
                 _error = true;
             } else {
                 var parts;
@@ -200,7 +216,7 @@ var chords = (function(){
                 }
                 var maxFret = 0;
                 var minFret = Number.MAX_VALUE;
-                for (var i = 0; i < 6; i++) {
+                for (var i = 0; i < _stringCount; i++) {
                     if (parts[i].toUpperCase() == "X") {
                         _chordPositions[i] = MUTED;
                     } else {
@@ -220,33 +236,41 @@ var chords = (function(){
         };
         
         
-        var CreateImage = function(ctx) {
+        var CreateImage = function(ctx, style) {
+	    // introducing a parameter object, for styling. Introduce defaults, keeping backwards compatibility in mind.
+	    style = typeof style !== 'undefined' ? style : { 'background-color' : _backgroundBrush };
+	    style['color'] = style['color'] ? style['color'] : _foregroundBrush;
+	    style['font-family'] = style['font-family'] ? style['font-family'] : FONT_NAME;
+
             _ctx = ctx;
-            _graphics.FillRectangle(_backgroundBrush, 0, 0, _imageWidth, _imageHeight);
+            //use top-level backgroundBrush unless specified
+	    if ( style['background-color'] ) {
+            	_graphics.FillRectangle(style['background-color'], 0, 0, _imageWidth, _imageHeight);
+	    }
             if (_error) {
                 //Draw red x
                 var errorPen = Pen('red', 3);
                 _graphics.DrawLine(errorPen, 0, 0, _imageWidth, _imageHeight);
                 _graphics.DrawLine(errorPen, 0, _imageHeight, _imageWidth, 0);
             } else {
-                DrawChordBox();
-                DrawChordPositions();
-                DrawChordName();
-                DrawFingers();
-                DrawBars();
+                DrawChordBox(style);
+                DrawChordPositions(style);
+                DrawChordName(style);
+                DrawFingers(style);
+                DrawBars(style);
             }
         };
         
-        var DrawChordBox = function() {
-            var pen = Pen(_foregroundBrush, _lineWidth);
+        var DrawChordBox = function(style) {
+            var pen = Pen(style.color, _lineWidth);
             var totalFretWidth = _fretWidth + _lineWidth;
 
-            for (var i = 0; i <= FRET_COUNT; i++) {
+            for (var i = 0; i <= _fretCount; i++) {
                 var y = _ystart + i * totalFretWidth;
                 _graphics.DrawLine(pen, _xstart, y, _xstart + _boxWidth - _lineWidth, y);
             }
 
-            for (i = 0; i < 6; i++) {
+            for (i = 0; i < _stringCount; i++) {
                 var x = _xstart + (i * totalFretWidth);
                 _graphics.DrawLine(pen, x, _ystart, x, _ystart + _boxHeight - _lineWidth);
             }
@@ -254,17 +278,17 @@ var chords = (function(){
             if (_baseFret == 1) {
                 //Need to draw the nut
                 var nutHeight = _fretWidth / 2;
-                _graphics.FillRectangle(_foregroundBrush, _xstart - _lineWidth / 2, _ystart - nutHeight, _boxWidth, nutHeight);
+                _graphics.FillRectangle(style.color, _xstart - _lineWidth / 2, _ystart - nutHeight, _boxWidth, nutHeight);
             }
         };
         
-        var DrawBars = function() {
+        var DrawBars = function(style) {
             var bars = {};
             var bar;
-            for (var i = 0; i < 5; i++) {
+            for (var i = 0; i < (_stringCount-1); i++) {
                 if (_chordPositions[i] != MUTED && _chordPositions[i] != OPEN && _fingers[i] != NO_FINGER && !bars.hasOwnProperty(_fingers[i])) {
                     bar = { 'Str':i, 'Pos':_chordPositions[i], 'Length':0, 'Finger':_fingers[i] };
-                    for (var j = i + 1; j < 6; j++) {
+                    for (var j = i + 1; j < _stringCount; j++) {
                         if (_fingers[j] == bar['Finger'] && _chordPositions[j] == _chordPositions[i]) {
                             bar['Length'] = j - i;
                         }
@@ -276,7 +300,7 @@ var chords = (function(){
             }
 
             //TODO: figure out why there are two pens here
-            var pen = Pen(_foregroundBrush, _lineWidth * 3);
+            var pen = Pen(style.color, _lineWidth * 3);
             var totalFretWidth = _fretWidth + _lineWidth;
             for (var b in bars) {
                 if (bars.hasOwnProperty(b)){
@@ -284,13 +308,13 @@ var chords = (function(){
                     var xstart = _xstart + bar['Str'] * totalFretWidth;
                     var xend = xstart + bar['Length'] * totalFretWidth;
                     var y = _ystart + (bar['Pos'] - _baseFret + 1) * totalFretWidth - (totalFretWidth / 2);
-                    pen = Pen(_foregroundBrush, _dotWidth / 2);
+                    pen = Pen(style.color, _dotWidth / 2);
                     _graphics.DrawLine(pen, xstart, y, xend, y);
                 }
             }
         };
 
-        var DrawChordPositions = function() {
+        var DrawChordPositions = function(style) {
             var yoffset = _ystart - _fretWidth;
             var xoffset = _lineWidth / 2;
             var totalFretWidth = _fretWidth + _lineWidth;
@@ -302,9 +326,9 @@ var chords = (function(){
                 var xpos = _xstart - (0.5 * _fretWidth) + (0.5 * _lineWidth) + (i * totalFretWidth);
                 if (relativePos > 0) {
                     var ypos = relativePos * totalFretWidth + yoffset;
-                    _graphics.FillCircle(_foregroundBrush, xpos, ypos, _dotWidth);
+                    _graphics.FillCircle(style.color, xpos, ypos, _dotWidth);
                 } else if (absolutePos == OPEN) {
-                    var pen = Pen(_foregroundBrush, _lineWidth);
+                    var pen = Pen(style.color, _lineWidth);
                     var ypos = _ystart - _fretWidth;
                     var markerXpos = xpos + ((_dotWidth - _markerWidth) / 2);
                     if (_baseFret == 1) {
@@ -312,7 +336,7 @@ var chords = (function(){
                     }
                     _graphics.DrawCircle(pen, markerXpos, ypos, _markerWidth);
                 } else if (absolutePos == MUTED) {
-                    var pen = Pen(_foregroundBrush, _lineWidth * 1.5);
+                    var pen = Pen(style.color, _lineWidth * 1.5);
                     var ypos = _ystart - _fretWidth;
                     var markerXpos = xpos + ((_dotWidth - _markerWidth) / 2);
                     if (_baseFret == 1) {
@@ -324,24 +348,24 @@ var chords = (function(){
             }
         }
 
-        var DrawFingers = function() {
+        var DrawFingers = function(style) {
             var xpos = _xstart + (0.5 * _lineWidth);
             var ypos = _ystart + _boxHeight;
-            var font = Font(FONT_NAME, _fingerFontSize);
+            var font = Font(style['font-family'], _fingerFontSize);
             for (var f=0; f<_fingers.length; f++) {
                 var finger = _fingers[f];
                 if (finger != NO_FINGER) {
                     var charSize = _graphics.MeasureString(finger.toString(), font);
-                    _graphics.DrawString(finger.toString(), font, _foregroundBrush, xpos - (0.5 * charSize.Width), ypos);
+                    _graphics.DrawString(finger.toString(), font, style.color, xpos - (0.5 * charSize.Width), ypos);
                 }
                 xpos += (_fretWidth + _lineWidth);
             }
         }
 
-        var DrawChordName = function() {
+        var DrawChordName = function(style) {
 
-            var nameFont = Font(FONT_NAME, _nameFontSize);
-            var superFont = Font(FONT_NAME, _superScriptFontSize);
+            var nameFont = Font(style['font-family'], _nameFontSize);
+            var superFont = Font(style['font-family'], _superScriptFontSize);
             var name;
             var supers;
             if (_chordName.indexOf('_') == -1) {
@@ -358,15 +382,15 @@ var chords = (function(){
             if (stringSize.Width < _boxWidth) {
                 xTextStart = _xstart + ((_boxWidth - stringSize.Width) / 2);
             }
-            _graphics.DrawString(name, nameFont, _foregroundBrush, xTextStart, 0.2 * _superScriptFontSize);
+            _graphics.DrawString(name, nameFont, style.color, xTextStart, 0.2 * _superScriptFontSize);
             if (supers != "") {
-                _graphics.DrawString(supers, superFont, _foregroundBrush, xTextStart + 0.8 * stringSize.Width, 0);
+                _graphics.DrawString(supers, superFont, style.color, xTextStart + 0.8 * stringSize.Width, 0);
             }
 
             if (_baseFret > 1) {
-                var fretFont = Font(FONT_NAME, _fretFontSize);
+                var fretFont = Font(style['font-family'], _fretFontSize);
                 var offset = (_fretFontSize - _fretWidth) / 2;
-                _graphics.DrawString(_baseFret + "fr", fretFont, _foregroundBrush, _xstart + _boxWidth + 0.4 * _fretWidth, _ystart - offset);
+                _graphics.DrawString(_baseFret + "fr", fretFont, style.color, _xstart + _boxWidth + 0.4 * _fretWidth, _ystart - offset);
             }
         }
         
@@ -387,26 +411,60 @@ var chords = (function(){
             Draw: CreateImage
         };
 
-    };  
-    
-    //requires jQuery
-    //example: <chord name="A" positions="X02220" fingers="--222-" size="7" ></chord>
-    var ReplaceChordElements = function() {
-        $('chord').each(function(i, elt){
-            var name = $(elt).attr('name');
-            var positions = $(elt).attr('positions');
-            var fingers = $(elt).attr('fingers');
-            var size = $(elt).attr('size');
-            var chord = ChordBoxImage(name, positions, fingers, size);
-            var canvas = $('<canvas></canvas>').attr({width:chord.getWidth(), height:chord.getHeight()}).insertAfter(elt);
-            var ctx = canvas[0].getContext('2d');
-            chord.Draw(ctx);
-        });
+    }; 
+    var RenderElements = function(elements) {
+	for (var i = 0; i < elements.length; i++) {
+		var el = elements[i];
+		var chordPos = el.getAttribute('data-positions');
+		if(chordPos != undefined) {
+			var chordFingers = el.getAttribute('data-fingers');
+			var chordSize = el.getAttribute('data-size');
+			var chordName = el.hasAttribute('data-name') ? el.getAttribute('data-name') : el.firstChild.nodeValue;
+			var style= el.style;
+			//important for re-jiggery
+			if(!el.getAttribute('data-name')) { el.setAttribute('data-name', chordName); };
+            		var chord = ChordBoxImage(chordName, chordPos, chordFingers, chordSize);
+            		var canvas = document.createElement('canvas');
+			canvas.setAttribute('width',chord.getWidth());
+			canvas.setAttribute('height',chord.getHeight());
+			var ctx= canvas.getContext('2d');
+			chord.Draw(ctx, style);
+			// remove existing child nodes
+			var children= el.childNodes;
+	  		for (var j = children.length-1; j >= 0; j--) {
+				el.removeChild(children[j]);
+			}
+          		el.appendChild(canvas);
+		}
+	}
+	};
+     //example: <chord name="A" positions="X02220" fingers="--222-" size="7" ></chord>
+     var ReplaceChordElements = function() {
+	  var elements= document.getElementsByTagName('chord');
+	  for (var i = elements.length-1; i >= 0; i--) {
+		var el = elements[i];
+		var name = el.getAttribute('name');
+		var positions = el.getAttribute('positions');
+		var fingers = el.getAttribute('fingers');
+		var size = el.getAttribute('size');
+                var chord = ChordBoxImage(name, positions, fingers, size);
+	        var canvas = document.createElement('canvas');
+		canvas.setAttribute('width',chord.getWidth());
+		canvas.setAttribute('height',chord.getHeight());
+		var ctx= canvas.getContext('2d');
+                chord.Draw(ctx);
+          	el.parentNode.replaceChild(canvas, el);
+	  }
     };
-      
+        //RenderElements uses friendlier markup 
+	//(keeping ReplaceChordElements for backward-compatibility)
+    var ReplaceDefault= function() {
+	RenderElements(document.getElementsByTagName('span'));
+	ReplaceChordElements();
+    }; 
     return {
         chord: ChordBoxImage,
-        replace: ReplaceChordElements,
+        replace: ReplaceDefault,
     };
 
 })();
