@@ -392,16 +392,21 @@ var chords = (function(){
     //requires jQuery
     //example: <chord name="A" positions="X02220" fingers="--222-" size="7" ></chord>
     var ReplaceChordElements = function() {
-        $('chord').each(function(i, elt){
-            var name = $(elt).attr('name');
-            var positions = $(elt).attr('positions');
-            var fingers = $(elt).attr('fingers');
-            var size = $(elt).attr('size');
+          var chords = document.getElementsByTagName('chord')
+          for(var i=0; i<chords.length; ++i) {
+            var elt = chords[i]
+            var name = elt.getAttribute('name');
+            var positions = elt.getAttribute('positions');
+            var fingers = elt.getAttribute('fingers');
+            var size = elt.getAttribute('size');
             var chord = ChordBoxImage(name, positions, fingers, size);
-            var canvas = $('<canvas></canvas>').attr({width:chord.getWidth(), height:chord.getHeight()}).insertAfter(elt);
-            var ctx = canvas[0].getContext('2d');
+            var canvas = document.createElement('canvas')
+            canvas.setAttribute('width', chord.getWidth())
+            canvas.setAttribute('height', chord.getHeight())
+            elt.parentNode.insertBefore(canvas, elt);
+            var ctx = canvas.getContext('2d');
             chord.Draw(ctx);
-        });
+        };
     };
       
     return {
