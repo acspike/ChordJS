@@ -493,7 +493,8 @@ var ChordJS = (function(){
             var positions = elt.getAttribute('positions');
             var fingers = elt.getAttribute('fingers');
             var size = elt.getAttribute('size');
-            GenerateChordHtml(name, positions, fingers, size);
+            var canvas = GenerateChordHtml(name, positions, fingers, size);
+            elt.parentNode.insertBefore(canvas, elt);
         };
     };
       
