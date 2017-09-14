@@ -460,6 +460,12 @@ var ChordJS = (function(){
     };  
     
     function GenerateChordHtml(name, positions, fingering, size) {
+        if (positions.length != 6 || fingering.length != 6) {
+            console.error('ChordJS cannot generate a chord diagram from invalid chord input! (Too many positions or fingers.');
+            console.log('ChordJS will render an empty chord instead!');
+            positions = 'xxxxxx';
+            fingering = '------';
+        }
         var chordObj = ChordBoxImage(name, positions, fingering, size);
         var canvas = document.createElement('canvas');
         canvas.setAttribute('class', 'rendered-chord');
