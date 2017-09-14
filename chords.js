@@ -23,7 +23,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var chords = (function(){
+var ChordJS = (function(){
     
     //Constants
     var NO_FINGER = '-';
@@ -498,3 +498,5 @@ var chords = (function(){
     };
 
 })();
+
+var chords = ChordJS;
