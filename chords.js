@@ -36,6 +36,7 @@ var chords = (function(){
     var MUTED = -1;
     var FRET_COUNT = 5;
     var FONT_NAME = "Arial";
+    var GUITAR_STRINGS = ['E','A','D','G','B','e'];
     
     var ChordBoxImage = function(name, chord, fingers, size) {
 
@@ -153,6 +154,7 @@ var chords = (function(){
             var perc = 0.8;
             _fretFontSize = _fretWidth / perc;
             _fingerFontSize = _fretWidth * 0.8;
+            _guitarStringFontSize = 'bold ' + (_fretWidth * 0.8);
             _nameFontSize = _fretWidth * 2 / perc;
             _superScriptFontSize = 0.7 * _nameFontSize;
             if (_size == 1) {
@@ -230,10 +232,12 @@ var chords = (function(){
                 _graphics.DrawLine(errorPen, 0, _imageHeight, _imageWidth, 0);
             } else {
                 DrawChordBox();
-                DrawChordPositions();
-                DrawChordName();
-                DrawFingers();
+                //DrawChordPositions();
                 DrawBars();
+                DrawChordPositionsAndFingers();
+                DrawChordName();
+                //DrawFingers();
+                DrawStringNames();
             }
         };
         
@@ -290,6 +294,7 @@ var chords = (function(){
             }
         };
 
+        /*
         var DrawChordPositions = function() {
             var yoffset = _ystart - _fretWidth;
             var xoffset = _lineWidth / 2;
@@ -322,8 +327,60 @@ var chords = (function(){
                     _graphics.DrawLine(pen, markerXpos, ypos + _markerWidth, markerXpos + _markerWidth, ypos);
                 }
             }
-        }
+        };
+        */
+        
+        var DrawChordPositionsAndFingers = function() {
+            var yoffset = _ystart - _fretWidth;
+            var xoffset = _lineWidth / 2;
+            var totalFretWidth = _fretWidth + _lineWidth;
+            var xfirstString = _xstart + 0.5 * _lineWidth;
+            var font = Font(FONT_NAME, _fingerFontSize);
+            for (var i = 0; i < _chordPositions.length; i++) {
+                var absolutePos = _chordPositions[i];
+                var relativePos = absolutePos - _baseFret + 1;
 
+                var xpos = _xstart - (0.5 * _fretWidth) + (0.5 * _lineWidth) + (i * totalFretWidth);
+                if (relativePos > 0) {
+                    var ypos = relativePos * totalFretWidth + yoffset;
+                    _graphics.FillCircle(_foregroundBrush, xpos, ypos, _dotWidth);
+                    var finger = _fingers[i];
+                    if (finger != NO_FINGER) {
+                        var charSize = _graphics.MeasureString(finger.toString(), font);
+                        _graphics.DrawString(finger.toString(), font, _backgroundBrush, xpos - (0.5 * charSize.Width) + _dotWidth/2, ypos);
+                    }
+                } else if (absolutePos == OPEN) {
+                    var pen = Pen(_foregroundBrush, _lineWidth);
+                    var ypos = _ystart - _fretWidth;
+                    var markerXpos = xpos + ((_dotWidth - _markerWidth) / 2);
+                    if (_baseFret == 1) {
+                        ypos -= _nutHeight;
+                    }
+                    _graphics.DrawCircle(pen, markerXpos, ypos, _markerWidth);
+                    var finger = _fingers[i];
+                    if (finger != NO_FINGER) {
+                        var charSize = _graphics.MeasureString(finger.toString(), font);
+                        _graphics.DrawString(finger.toString(), font, _backgroundBrush, xpos - (0.5 * charSize.Width) + _dotWidth/2, ypos);
+                    }
+                } else if (absolutePos == MUTED) {
+                    var pen = Pen(_foregroundBrush, _lineWidth * 1.5);
+                    var ypos = _ystart - _fretWidth;
+                    var markerXpos = xpos + ((_dotWidth - _markerWidth) / 2);
+                    if (_baseFret == 1) {
+                        ypos -= _nutHeight;
+                    }
+                    _graphics.DrawLine(pen, markerXpos, ypos, markerXpos + _markerWidth, ypos + _markerWidth);
+                    _graphics.DrawLine(pen, markerXpos, ypos + _markerWidth, markerXpos + _markerWidth, ypos);
+                    var finger = _fingers[i];
+                    if (finger != NO_FINGER) {
+                        var charSize = _graphics.MeasureString(finger.toString(), font);
+                        _graphics.DrawString(finger.toString(), font, _backgroundBrush, xpos - (0.5 * charSize.Width) + _dotWidth/2, ypos);
+                    }
+                }
+            }
+        };
+        
+        /*
         var DrawFingers = function() {
             var xpos = _xstart + (0.5 * _lineWidth);
             var ypos = _ystart + _boxHeight;
@@ -337,6 +394,19 @@ var chords = (function(){
                 xpos += (_fretWidth + _lineWidth);
             }
         }
+        */
+        
+        var DrawStringNames = function() {
+            var xpos = _xstart + (0.5 * _lineWidth);
+            var ypos = _ystart + _boxHeight;
+            var font = Font(FONT_NAME, _guitarStringFontSize);
+            for (var s=0; s<6; s++) {
+                var guitarString = GUITAR_STRINGS[s];
+                var charSize = _graphics.MeasureString(guitarString, font);
+                _graphics.DrawString(guitarString, font, _foregroundBrush, xpos - (0.5 * charSize.Width), ypos);
+                xpos += (_fretWidth + _lineWidth);
+            }
+        };
 
         var DrawChordName = function() {
 
@@ -368,7 +438,7 @@ var chords = (function(){
                 var offset = (_fretFontSize - _fretWidth) / 2;
                 _graphics.DrawString(_baseFret + "fr", fretFont, _foregroundBrush, _xstart + _boxWidth + 0.4 * _fretWidth, _ystart - offset);
             }
-        }
+        };
         
         //MAIN
         if (name == null || typeof name == 'undefined') {
