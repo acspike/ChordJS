@@ -460,19 +460,27 @@ var chords = (function(){
     };  
     
     function GenerateChordHtml(name, positions, fingering, size) {
-        var chordObj = ChordBoxImage(name, positions, fingering, size)
-        var canvas = document.createElement('canvas')
-        canvas.setAttribute('width', chordObj.getWidth())
-        canvas.setAttribute('height', chordObj.getHeight())
-        var ctx = canvas.getContext('2d')
-        chordObj.Draw(ctx)
-        return canvas
+        var chordObj = ChordBoxImage(name, positions, fingering, size);
+        var canvas = document.createElement('canvas');
+        canvas.setAttribute('class', 'rendered-chord');
+        canvas.setAttribute('width', chordObj.getWidth());
+        canvas.setAttribute('height', chordObj.getHeight());
+        var ctx = canvas.getContext('2d');
+        chordObj.Draw(ctx);
+        return canvas;
     }
     
     //requires jQuery
     //example: <chord name="A" positions="X02220" fingers="--222-" size="7" ></chord>
-    var ReplaceChordElements = function() {
-          var chords = document.getElementsByTagName('chord')
+    var ReplaceChordElements = function(baseEl) {
+          baseEl = baseEl || 'body';
+
+          var renderedChords = document.querySelector(baseEl).getElementsByClassName('rendered-chord')
+          for(var i=0, l=renderedChords.length; i<l; ++i) {
+              var elt = renderedChords[0];
+              elt.remove();
+          }
+          var chords = document.getElementsByTagName('chord');
           for(var i=0; i<chords.length; ++i) {
             var elt = chords[i]
             var name = elt.getAttribute('name');
