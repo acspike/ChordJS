@@ -459,6 +459,16 @@ var chords = (function(){
 
     };  
     
+    function GenerateChordHtml(name, positions, fingering, size) {
+        var chordObj = ChordBoxImage(name, positions, fingering, size)
+        var canvas = document.createElement('canvas')
+        canvas.setAttribute('width', chordObj.getWidth())
+        canvas.setAttribute('height', chordObj.getHeight())
+        var ctx = canvas.getContext('2d')
+        chordObj.Draw(ctx)
+        return canvas
+    }
+    
     //requires jQuery
     //example: <chord name="A" positions="X02220" fingers="--222-" size="7" ></chord>
     var ReplaceChordElements = function() {
@@ -469,19 +479,14 @@ var chords = (function(){
             var positions = elt.getAttribute('positions');
             var fingers = elt.getAttribute('fingers');
             var size = elt.getAttribute('size');
-            var chord = ChordBoxImage(name, positions, fingers, size);
-            var canvas = document.createElement('canvas')
-            canvas.setAttribute('width', chord.getWidth())
-            canvas.setAttribute('height', chord.getHeight())
-            elt.parentNode.insertBefore(canvas, elt);
-            var ctx = canvas.getContext('2d');
-            chord.Draw(ctx);
+            GenerateChordHtml(name, positions, fingers, size);
         };
     };
       
     return {
         chord: ChordBoxImage,
         replace: ReplaceChordElements,
+        generate: GenerateChordHtml
     };
 
 })();
