@@ -36,9 +36,8 @@ var ChordJS = (function(){
     var MUTED = -1;
     var FRET_COUNT = 5;
     var FONT_NAME = "Arial";
-    var GUITAR_STRINGS = ['E','A','D','G','B','e'];
     
-    var ChordBoxImage = function(name, chord, fingers, size) {
+    var ChordBoxImage = function(name, chord, fingers, size, stringNames) {
 
         //Fields
         var _ctx;
@@ -108,6 +107,8 @@ var ChordJS = (function(){
         var _chordPositions = [];
         var _fingers = [NO_FINGER, NO_FINGER, NO_FINGER,
                                                  NO_FINGER, NO_FINGER, NO_FINGER];
+        
+        var _stringNames = stringNames || 'EADGBe';
         var _chordName;
         var _error;
 
@@ -222,7 +223,7 @@ var ChordJS = (function(){
         };
         
         
-        var CreateImage = function(ctx) {
+        var CreateImage = function(ctx,layout) {
             _ctx = ctx;
             _graphics.FillRectangle(_backgroundBrush, 0, 0, _imageWidth, _imageHeight);
             if (_error) {
@@ -231,13 +232,19 @@ var ChordJS = (function(){
                 _graphics.DrawLine(errorPen, 0, 0, _imageWidth, _imageHeight);
                 _graphics.DrawLine(errorPen, 0, _imageHeight, _imageWidth, 0);
             } else {
-                DrawChordBox();
-                //DrawChordPositions();
-                DrawBars();
-                DrawChordPositionsAndFingers();
-                DrawChordName();
-                //DrawFingers();
-                DrawStringNames();
+                if (typeof layout === 'undefined' || layout === '1') {
+                    DrawChordBox();
+                    DrawBars();
+                    DrawChordPositionsAndFingers();
+                    DrawChordName();
+                    DrawStringNames();
+                } else if (layout === '2') {
+                    DrawChordBox();
+                    DrawChordPositions();
+                    DrawBars();
+                    DrawChordName();
+                    DrawFingers();
+                }
             }
         };
         
@@ -294,7 +301,7 @@ var ChordJS = (function(){
             }
         };
 
-        /*
+        
         var DrawChordPositions = function() {
             var yoffset = _ystart - _fretWidth;
             var xoffset = _lineWidth / 2;
@@ -328,7 +335,7 @@ var ChordJS = (function(){
                 }
             }
         };
-        */
+        
         
         var DrawChordPositionsAndFingers = function() {
             var yoffset = _ystart - _fretWidth;
@@ -380,7 +387,7 @@ var ChordJS = (function(){
             }
         };
         
-        /*
+        
         var DrawFingers = function() {
             var xpos = _xstart + (0.5 * _lineWidth);
             var ypos = _ystart + _boxHeight;
@@ -394,14 +401,14 @@ var ChordJS = (function(){
                 xpos += (_fretWidth + _lineWidth);
             }
         }
-        */
+        
         
         var DrawStringNames = function() {
             var xpos = _xstart + (0.5 * _lineWidth);
             var ypos = _ystart + _boxHeight;
             var font = Font(FONT_NAME, _guitarStringFontSize);
             for (var s=0; s<6; s++) {
-                var guitarString = GUITAR_STRINGS[s];
+                var guitarString = _stringNames[s];
                 var charSize = _graphics.MeasureString(guitarString, font);
                 _graphics.DrawString(guitarString, font, _foregroundBrush, xpos - (0.5 * charSize.Width), ypos);
                 xpos += (_fretWidth + _lineWidth);
@@ -459,20 +466,20 @@ var ChordJS = (function(){
 
     };  
     
-    function GenerateChordHtml(name, positions, fingering, size) {
+    function GenerateChordHtml(name, positions, fingering, size, layout, stringNames) {
         if (positions.length != 6 || fingering.length != 6) {
             console.error('ChordJS cannot generate a chord diagram from invalid chord input! (Too many positions or fingers.');
             console.log('ChordJS will render an empty chord instead!');
             positions = 'xxxxxx';
             fingering = '------';
         }
-        var chordObj = ChordBoxImage(name, positions, fingering, size);
+        var chordObj = ChordBoxImage(name, positions, fingering, size, stringNames);
         var canvas = document.createElement('canvas');
         canvas.setAttribute('class', 'rendered-chord');
         canvas.setAttribute('width', chordObj.getWidth());
         canvas.setAttribute('height', chordObj.getHeight());
         var ctx = canvas.getContext('2d');
-        chordObj.Draw(ctx);
+        chordObj.Draw(ctx,layout);
         return canvas;
     }
     
@@ -493,7 +500,9 @@ var ChordJS = (function(){
             var positions = elt.getAttribute('positions');
             var fingers = elt.getAttribute('fingers');
             var size = elt.getAttribute('size');
-            var canvas = GenerateChordHtml(name, positions, fingers, size);
+            var layout = elt.getAttribute('layout');
+            var stringNames = elt.getAttribute('string-names');
+            var canvas = GenerateChordHtml(name, positions, fingers, size, layout, stringNames);
             elt.parentNode.insertBefore(canvas, elt);
         };
     };
