@@ -86,6 +86,7 @@ var ChordJS = (function(){
                 font();
                 var metrics = _ctx.measureText(text);
                 metrics.Width = metrics.width;
+                metrics.Height = _ctx.measureText('M').width; // calculating the with of the letter 'M' a good approximation of the line height
                 return metrics;
             };
             var DrawString = function(text, font, color, x, y) {
@@ -354,7 +355,7 @@ var ChordJS = (function(){
                     var finger = _fingers[i];
                     if (finger != NO_FINGER) {
                         var charSize = _graphics.MeasureString(finger.toString(), font);
-                        _graphics.DrawString(finger.toString(), font, _backgroundBrush, xpos - (0.5 * charSize.Width) + _dotWidth/2, ypos);
+                        _graphics.DrawString(finger.toString(), font, _backgroundBrush, xpos - (0.5 * charSize.Width) + _dotWidth/2, ypos - (0.5 * charSize.Height) + _dotWidth/2);
                     }
                 } else if (absolutePos == OPEN) {
                     var pen = Pen(_foregroundBrush, _lineWidth);
@@ -367,7 +368,7 @@ var ChordJS = (function(){
                     var finger = _fingers[i];
                     if (finger != NO_FINGER) {
                         var charSize = _graphics.MeasureString(finger.toString(), font);
-                        _graphics.DrawString(finger.toString(), font, _backgroundBrush, xpos - (0.5 * charSize.Width) + _dotWidth/2, ypos);
+                        _graphics.DrawString(finger.toString(), font, _backgroundBrush, xpos - (0.5 * charSize.Width) + _dotWidth/2, ypos - (0.5 * charSize.Height) + _dotWidth/2);
                     }
                 } else if (absolutePos == MUTED) {
                     var pen = Pen(_foregroundBrush, _lineWidth * 1.5);
@@ -381,7 +382,7 @@ var ChordJS = (function(){
                     var finger = _fingers[i];
                     if (finger != NO_FINGER) {
                         var charSize = _graphics.MeasureString(finger.toString(), font);
-                        _graphics.DrawString(finger.toString(), font, _backgroundBrush, xpos - (0.5 * charSize.Width) + _dotWidth/2, ypos);
+                        _graphics.DrawString(finger.toString(), font, _backgroundBrush, xpos - (0.5 * charSize.Width) + _dotWidth/2, ypos - (0.5 * charSize.Height) + _dotWidth/2);
                     }
                 }
             }
@@ -396,7 +397,7 @@ var ChordJS = (function(){
                 var finger = _fingers[f];
                 if (finger != NO_FINGER) {
                     var charSize = _graphics.MeasureString(finger.toString(), font);
-                    _graphics.DrawString(finger.toString(), font, _foregroundBrush, xpos - (0.5 * charSize.Width), ypos);
+                    _graphics.DrawString(finger.toString(), font, _foregroundBrush, xpos - (0.5 * charSize.Width), ypos - (0.5 * charSize.Height) + _dotWidth/2);
                 }
                 xpos += (_fretWidth + _lineWidth);
             }
