@@ -31,11 +31,43 @@ Then include script similar to the following on your page:
     <script src="chords.js"></script>
     <script type="text/javascript">//<![CDATA[
     $(document).ready(function(){
-        chords.replace();
+        ChordJS.replace();
     });
     //]]>
     </script>
 
-You could also build chords manually. See the source of chords.replace() to see how this could be done.
+## Documentation
 
+### Syntax
+
+#### &lt;chord name="..." positions="..." fingers="..." size="..." layout="..." strings="..."  &gt;&lt;/chord&gt; elements
+
+#### ChordJS.generate(name, positions, fingering, size, layout, strings)
+Returns a chord diagram as a canvas element, which can easily be added to the DOM.
+
+### Options
+
+ - name
+    Name of the Chord. E.g.: `C#`
+ - positions
+    Fret positions for each string. Muted string = `x`; Open string = 0. E.g.: `x02220`
+ - fingers  
+    Fingers to use for each string. No finger = `-`. E.g.: `--123-` (you can use different characters if you like)
+ - size
+    The size of the chord diagram to generate. E.g.: `3` for medium size or `5` for a pretty big size.
+ - layout (optional, default: `'1'`)
+    The layout for the chord diagram.   
+    `'1'` would draw the finger names onto the strings and show the string names below the diagram.  
+    `'2'` would draw the finger names below the chord diagrams and not dispaly the string names.  
+ - strings (optional)  
+    Names of the strings. E.g. `EADGBe` for standard tuning.  
+
+#### ChordJS.replace(baseElement)
+
+Replace `<chord>` elements with rendered chord diagrams.
+
+ - baseElement (optional)
+    The element in which to replace the <chord> elements.
+
+## License
 The source is licensed under the GPL. 
