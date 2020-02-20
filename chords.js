@@ -501,7 +501,11 @@ var ChordJS = (function(){
             var positions = elt.getAttribute('positions');
             var fingers = elt.getAttribute('fingers');
             var size = elt.getAttribute('size');
-            var layout = elt.getAttribute('layout');
+            if (elt.getAttribute('layout') === null) {
+				var layout = elt.setAttribute('layout', '1');
+			} else {
+				var layout = elt.getAttribute('layout');
+			}
             var stringNames = elt.getAttribute('strings');
             var canvas = GenerateChordHtml(name, positions, fingers, size, layout, stringNames);
             elt.parentNode.insertBefore(canvas, elt);
