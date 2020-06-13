@@ -193,7 +193,7 @@ var ChordJS = (function(){
         };
 
         var ParseChord = function(chord) {
-            if (chord == null || typeof chord == 'undefined' || !chord.match(/[\dxX]{6}|((1|2)?[\dxX]-){5}(1|2)?[\dxX]/)) {
+            if (chord == null || typeof chord == 'undefined' || !chord.match(/^[\dxX]{6}$|^((1|2)?[\dxX]-){5}(1|2)?[\dxX]$/)) { // ^..$ added
                 _error = true;
             } else {
                 var parts;
@@ -468,7 +468,7 @@ var ChordJS = (function(){
     };  
     
     function GenerateChordHtml(name, positions, fingering, size, layout, stringNames) {
-        if (positions.length != 6 || fingering.length != 6) {
+        if ((positions.length != 6 && !positions.includes('-')) || fingering.length != 6) { // detailed positions check -> ParseChord()
             console.error('ChordJS cannot generate a chord diagram from invalid chord input! (Too many positions or fingers.');
             console.log('ChordJS will render an empty chord instead!');
             positions = 'xxxxxx';
